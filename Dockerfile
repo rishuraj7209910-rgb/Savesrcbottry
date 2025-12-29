@@ -1,14 +1,23 @@
-FROM python:3.10.4-slim-buster
-RUN apt update && apt upgrade -y
-RUN apt-get install git curl python3-pip ffmpeg -y
-RUN apt-get -y install git
-RUN apt-get install -y wget python3-pip curl bash neofetch ffmpeg software-properties-common
-COPY requirements.txt .
+FROM python:3.10-slim-bookworm
 
-RUN pip3 install wheel
-RUN pip3 install --no-cache-dir -U -r requirements.txt
 WORKDIR /app
+
+# System dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        git curl wget ffmpeg bash && \
+    rm -rf /var/lib/apt/lists/*
+
+# Python deps
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip wheel && \
+    pip install --no-cache-dir -r requirements.txt
+
+# App code
 COPY . .
+
+# Koyeb port
 EXPOSE 5000
 
-CMD flask run -h 0.0.0.0 -p 5000 & python3 -m devgagan
+# Single main process (IMPORTANT)
+CMD ["python", "-m", "devgagan"]
